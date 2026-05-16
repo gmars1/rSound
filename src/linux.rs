@@ -221,16 +221,18 @@ impl AudioController for LinuxController {
             return Err(ControllerError::NotFound);
         }
 
-        let avg = ((left + right) / 2.0 * 100.0).round() as u32;
+        let left_pct = (left * 100.0).round() as u32;
+        let right_pct = (right * 100.0).round() as u32;
 
         Self::run_pactl(&[
             "set-sink-input-volume",
             &id.to_string(),
-            &format!("{}%", avg),
+            &format!("{}%", left_pct),
+            &format!("{}%", right_pct),
         ])?;
 
         if let Some(session) = self.sessions.get_mut(&id) {
-            session.volume = avg as f32 / 100.0;
+            session.volume = (left + right) / 2.0;
             session.left_volume = left;
             session.right_volume = right;
         }
