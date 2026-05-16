@@ -196,6 +196,14 @@ impl SessionEnumerator {
     pub fn clear(&mut self) {
         self.sessions.clear();
     }
+
+    pub fn update_session_volume(&mut self, id: u32, left: f32, right: f32) {
+        if let Some(session) = self.sessions.get_mut(&id) {
+            session.left_volume = left;
+            session.right_volume = right;
+            session.volume = (left + right) / 2.0;
+        }
+    }
 }
 
 impl Default for SessionEnumerator {

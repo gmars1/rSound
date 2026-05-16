@@ -130,7 +130,7 @@ impl AudioController for WindowsController {
             return Err(ControllerError::InvalidParameter);
         }
 
-        let enumerator = self
+        let mut enumerator = self
             .enumerator
             .lock()
             .map_err(|_| ControllerError::Other("Mutex poisoned".to_string()))?;
@@ -142,6 +142,8 @@ impl AudioController for WindowsController {
         unsafe {
             session.set_volume(left, right)?;
         }
+
+        enumerator.update_session_volume(id, left, right);
 
         Ok(())
     }
