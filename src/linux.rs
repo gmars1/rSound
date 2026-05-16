@@ -139,7 +139,7 @@ impl LinuxController {
                         let device = device.trim();
                         current.device = Some(device.to_string());
                     }
-                } else if line.starts_with("volume:") {
+                } else if line.to_lowercase().starts_with("volume:") {
                     let channels: Vec<&str> = line.split(',').collect();
                     current.channel_count = channels.len() as u32;
 
