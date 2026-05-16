@@ -52,9 +52,13 @@ jobs:
 
       - run: cargo build --release --locked
 
+      - name: Rename binary
+        if: inputs.upload-artifacts
+        run: cp target/release/audio-controller${{ matrix.ext }} target/release/${{ matrix.artifact }}${{ matrix.ext }}
+
       - uses: actions/upload-artifact@v4
         if: inputs.upload-artifacts
         with:
           name: ${{ matrix.artifact }}
-          path: target/release/audio-controller${{ matrix.ext }}
+          path: target/release/${{ matrix.artifact }}${{ matrix.ext }}
           if-no-files-found: error
