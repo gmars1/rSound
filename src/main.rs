@@ -227,51 +227,42 @@ mod tui_app {
             }
         };
 
-        let session = &app.sessions[app.selected];
+        if value > 100 {
+            app.set_message("Value must be 0-100".into());
+            return;
+        }
+
+        let v = value as f32 / 100.0;
+        let id = app.sessions[app.selected].id;
+        let cur_left = app.sessions[app.selected].left_volume;
+        let cur_right = app.sessions[app.selected].right_volume;
 
         match app.editing {
             EditingField::Volume => {
-                if value > 100 {
-                    app.set_message("Value must be 0-100".into());
-                    return;
-                }
-                let v = value as f32 / 100.0;
-                if let Err(e) = controller.set_volume(session.id, v, v) {
+                if let Err(e) = controller.set_volume(id, v, v) {
                     app.set_message(format!("Volume failed: {e}"));
                 } else {
                     app.set_message(format!("Volume set to {value}%"));
                 }
             }
             EditingField::BalanceLeft => {
-                if value > 100 {
-                    app.set_message("Value must be 0-100".into());
-                    return;
-                }
-                let left = value as f32 / 100.0;
-                let right = session.right_volume;
-                if let Err(e) = controller.set_volume(session.id, left, right) {
+                if let Err(e) = controller.set_volume(id, v, cur_right) {
                     app.set_message(format!("Balance failed: {e}"));
                 } else {
                     app.editing = EditingField::BalanceRight;
                     app.input_buffer.clear();
+                    app.sessions = controller.list_sessions().unwrap_or_default();
                     app.set_message("Enter Right (0-100)".into());
                     return;
                 }
             }
             EditingField::BalanceRight => {
-                if value > 100 {
-                    app.set_message("Value must be 0-100".into());
-                    return;
-                }
-                let left = session.left_volume;
-                let right = value as f32 / 100.0;
-                if let Err(e) = controller.set_volume(session.id, left, right) {
+                if let Err(e) = controller.set_volume(id, cur_left, v) {
                     app.set_message(format!("Balance failed: {e}"));
                 } else {
                     app.set_message(format!(
-                        "Balance set: L={}{}% R={value}%",
-                        (session.left_volume * 100.0).round() as u32,
-                        "%"
+                        "Balance set: L={}% R={value}%",
+                        (cur_left * 100.0).round() as u32,
                     ));
                 }
             }
