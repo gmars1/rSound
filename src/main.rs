@@ -391,7 +391,7 @@ mod tui_app {
         }
 
         if app.mode == AppMode::Editing {
-            let popup_area = centered_rect(45, 5, f.area());
+            let popup_area = centered_rect(45, 30, f.area());
             f.render_widget(Clear, popup_area);
 
             let label = match app.editing {
