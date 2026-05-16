@@ -34,16 +34,35 @@ jobs:
           target: ${{ matrix.target }}
       - uses: swatinem/rust-cache@v2
       - run: cargo build --release --locked
-
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: target/release/audio-controller${{ matrix.binary_ext }}
           if-no-files-found: error
 
+  build-arch:
+    name: Build (arch)
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    outputs:
+      release_tag: ${{ github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: |
+          pacman -Syu --noconfirm rustup base-devel
+          rustup default stable
+      - run: cargo build --release --locked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audio-controller-arch
+          path: target/release/audio-controller
+          if-no-files-found: error
+
   release:
     name: Create GitHub Release
-    needs: build
+    needs: [build, build-arch]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -55,7 +74,6 @@ jobs:
           pattern: audio-controller-*
           path: ./release-files
           merge-multiple: true
-
       - uses: softprops/action-gh-release@v2
         with:
           files: ./release-files/*
