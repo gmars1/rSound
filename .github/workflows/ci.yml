@@ -6,45 +6,4 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.name }}
-    strategy:
-      matrix:
-        include:
-          - name: Windows
-            runner: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact: audio-controller-windows
-            ext: .exe
-          - name: Ubuntu
-            runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact: audio-controller-linux
-            ext: ""
-          - name: Arch
-            runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact: audio-controller-arch
-            ext: ""
-
-    runs-on: ${{ matrix.runner }}
-    container: ${{ matrix.name == 'Arch' && 'archlinux:latest' || '' }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust (Arch)
-        if: matrix.name == 'Arch'
-        run: |
-          pacman -Syu --noconfirm rustup base-devel
-          rustup default stable
-
-      - name: Install Rust (others)
-        if: matrix.name != 'Arch'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          target: ${{ matrix.target }}
-
-      - uses: swatinem/rust-cache@v2
-        if: matrix.name != 'Arch'
-
-      - run: cargo build --release --locked
+    uses: ./.github/workflows/build.yml
