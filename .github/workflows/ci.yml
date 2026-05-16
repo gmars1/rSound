@@ -1,0 +1,63 @@
+name: CI + Release
+
+on:
+  push:
+    branches: [ "master" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: audio-controller-windows
+            binary_ext: .exe
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: audio-controller-linux
+            binary_ext: ""
+
+    runs-on: ${{ matrix.os }}
+    outputs:
+      release_tag: ${{ github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+      - uses: swatinem/rust-cache@v2
+      - run: cargo build --release --locked
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: target/release/audio-controller${{ matrix.binary_ext }}
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: audio-controller-*
+          path: ./release-files
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ./release-files/*
+          draft: false
+          prerelease: false
