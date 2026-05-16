@@ -360,12 +360,8 @@ mod tui_app {
             if app.selected < app.sessions.len() {
                 let s = &app.sessions[app.selected];
                 let bar_text = format!(
-                    "  Volume: {}  L: {}{}  R: {}{}  Channels: {}",
-                    format_bar(s.volume),
-                    (s.left_volume * 100.0).round() as u32,
-                    "%",
-                    (s.right_volume * 100.0).round() as u32,
-                    "%",
+                    "  {}  {}",
+                    format_bar(s.left_volume, s.right_volume),
                     if s.channel_count <= 1 {
                         "mono"
                     } else {
@@ -495,10 +491,16 @@ mod tui_app {
         }
     }
 
-    fn format_bar(volume: f32) -> String {
-        let filled = (volume * 20.0).round() as usize;
-        let empty = 20 - filled;
-        format!("[{}{}]", "█".repeat(filled), "░".repeat(empty))
+    fn format_bar(left: f32, right: f32) -> String {
+        let l_pct = (left * 100.0).round() as u32;
+        let r_pct = (right * 100.0).round() as u32;
+        let total = left + right;
+        let balance = if total > 0.0 { left / total } else { 0.5 };
+        let pos = (balance * 20.0).round() as usize;
+        let pos = pos.clamp(0, 20);
+        let before = "█".repeat(pos);
+        let after = "█".repeat(20 - pos);
+        format!("L{:>3}% {}│{} R{:>3}%", l_pct, before, after, r_pct)
     }
 
     fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
